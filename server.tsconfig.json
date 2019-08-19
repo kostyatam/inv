@@ -1,0 +1,11 @@
+{
+    "compilerOptions": {
+        "types": ["node", "express"]
+    },
+    "include": [
+        "src/**/*"
+    ],
+    "exclude": [
+        "src/public/**/*"
+    ]
+ }
