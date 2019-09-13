@@ -1,6 +1,8 @@
 {
     "compilerOptions": {
-        "types": ["node", "express"]
+        "types": ["node", "express"],
+        "esModuleInterop": true,
+        "noImplicitAny": true
     },
     "include": [
         "src/**/*"

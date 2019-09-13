@@ -4,6 +4,7 @@ const NodemonPlugin = require( 'nodemon-webpack-plugin' );
 const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
+  devtool: 'eval-source-map',
   // entry is where, say, your app starts - it can be called main.ts, index.ts, app.ts, whatever
   entry: ['./src/main.ts'],
   output: {
@@ -18,6 +19,12 @@ module.exports = {
   externals: [
     nodeExternals(),
   ],
+  resolve: {
+    modules: [
+      path.resolve('./src'),
+      path.resolve('./node_modules')
+    ]
+  },
   module: {
     rules: [
       {

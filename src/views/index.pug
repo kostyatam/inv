@@ -1,6 +1,44 @@
 html
-  head
-    title= title
-  body
-    h1= message
-    script(src="js/index.js")
+    head
+        title Представьте
+        style
+            include index.css
+    body
+        form.form
+            | Сколько бы вы заработали,
+            br
+            | если бы вкладывали
+            br
+            | каждый месяц по
+            input.form__input(
+                id='sum'
+                type='text'
+                value=sum
+            )
+            |₽
+            br
+            |в акции
+            input.form__input(
+                id='ticker'
+                type='text'
+                value=ticker
+            )
+            br
+            |на протяжении
+            select.form__input(id='yearsCount')
+                each year in years
+                    option(value=year) #{year}
+            |лет?
+            div.form-footer
+                input.form__btn(
+                    id='get'
+                    type='submit'
+                    value="Узнать"
+                )
+            a(
+                href='/'
+            )
+                |Новатэк за 5 лет
+        script(
+            src='js/main.js'
+        )

@@ -1,17 +1,37 @@
-import * as express from 'express';
-import * as path from 'path';
+import {range} from 'lodash';
+import express from 'express';
+import {apiRouter} from './routes';
+import {app} from './app';
+import moment from 'moment';
 
-const app = express();
+const server = express();
 const PORT = 4040;
 
-app.use(express.static('dist/public'));
-app.set('views', 'dist/views');
-app.set('view engine', 'pug');
+server.use(express.static('dist/public'));
+server.set('views', 'dist/views');
+server.set('view engine', 'pug');
 
-app.get('/', (req, res) => {
-    res.render('index', { title: 'Hello there!', message: 'BACKEND BUILDING WORKS!'});
+server.get('/', async (req, res) => {
+    try {
+        const shares = await app.getShares();
+        const index = Math.round(Math.random() * (shares.length - 1));
+        const share = shares[index];
+        const borders = await app.getBorders(share.ticker);
+        const years = moment(moment()).diff(borders.from, 'years');
+        res.render('index', {
+            sum: 10000,
+            years: range(1, years),
+            ticker: share.ticker
+        });
+    } catch (err) {
+        console.log(err)
+    }
 });
 
-app.listen(PORT, () => {
-    console.log('server started at http://localhost:' + PORT);
-});
+server.use('/api', apiRouter)
+
+app.init().then(() => {
+    server.listen(PORT, () => {
+        console.log('server started at http://localhost:' + PORT);
+    });
+}).catch(err => console.log(err))
