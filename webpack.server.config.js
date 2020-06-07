@@ -4,7 +4,7 @@ const NodemonPlugin = require( 'nodemon-webpack-plugin' );
 const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
-  devtool: 'eval-source-map',
+  devtool: 'inline-source-map',
   // entry is where, say, your app starts - it can be called main.ts, index.ts, app.ts, whatever
   entry: ['./src/main.ts'],
   output: {
@@ -14,7 +14,7 @@ module.exports = {
   // This forces webpack not to compile TypeScript for one time, but to stay running, watch for file changes in project directory and re-compile if needed
   watch: true,
   // Is needed to have in compiled output imports Node.JS can understand. Quick search gives you more info
-  target: 'node',
+  //target: 'node',
   // Prevents warnings from TypeScript compiler
   externals: [
     nodeExternals(),

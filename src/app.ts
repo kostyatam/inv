@@ -3,6 +3,11 @@ import {moexService} from './services/moex';
 import {IBorders, IHistory, IShare} from './types/moex';
 import moment from 'moment';
 
+
+export enum EPeriod {
+    MONTHLY = 'MONTHLY',
+}
+
 class App {
     connection: mysql.Connection;
     init() {
@@ -59,6 +64,9 @@ class App {
                     }, {
                         ticker: 'GAZP',
                         name: 'Газпром'
+                    }, {
+                        ticker: 'YNDX',
+                        name: 'Яндекс'
                     }];
                     const sql = 'INSERT INTO shares VALUES ?;';
                     return this.connection.query(sql, [shares.map(({ticker, name}) => [ticker, name])], (err) => {
@@ -89,7 +97,7 @@ class App {
     getHistory (ticker: string, {from, till}: IBorders) {
         const insertHistory = (history: IHistory[]) => new Promise<IHistory[]>((resolve, reject) => {
             const preparedHistory = history.map(({date, open, close, low, high}) => [ticker, date, open, close, low, high])
-            const sql = 'INSERT INTO history VALUES ?;';
+            const sql = 'INSERT INTO history(ticker,date,open,close,low,high) VALUES ?;';
             this.connection.query(sql, [preparedHistory], (err) => {
                 if (err) reject(err);
                 resolve(history)
@@ -123,6 +131,79 @@ class App {
                 Promise.all(requests).then(responses => responses.reduce((prev, cur) => prev.concat(cur), [])).then(resolve, reject);
             })
         })
+    }
+
+    pick (history: IHistory[], from: string, period: EPeriod = EPeriod.MONTHLY): IHistory[] {
+        if (period === EPeriod.MONTHLY) {
+          const res: IHistory[] = [];
+          const pickDate = moment(from).set({
+
+          });
+          history.reduce((prev: IHistory, next: IHistory) => {
+            const currentDate = moment(next.date);
+            const prevDate = prev && moment(prev.date);
+            if (currentDate.isBefore(pickDate)) {
+                return next;
+            }
+            const isCurrentDateOnSameMonth = pickDate.month() === currentDate.month() || pickDate.year() === currentDate.year();
+            const isPrevDateOnSameMonth = prevDate && (pickDate.month() === prevDate.month() || pickDate.year() === prevDate.year());
+            if (!isCurrentDateOnSameMonth) {
+                if (isPrevDateOnSameMonth) {
+                    res.push(prev);
+                }
+      
+                pickDate.set({
+                    year: currentDate.year(),
+                    month: currentDate.month()
+                });
+      
+              return next;
+            }
+      
+            if (pickDate.isSameOrBefore(currentDate)) {
+                if (isPrevDateOnSameMonth) {
+                    const diffWithCurrentDate = Math.abs(pickDate.diff(currentDate));
+                    const diffWithPrevDate = Math.abs(pickDate.diff(prevDate));
+        
+                    if (diffWithPrevDate < diffWithCurrentDate) {
+                        res.push(prev);
+                        pickDate.add(1, 'month');
+                        return next;
+                    }
+                }
+              
+                res.push(next);
+                pickDate.add(1, 'month');
+                return null;
+            }
+      
+            return next;
+          });
+
+          return res;
+        }
+    }
+
+    buy (picked: IHistory[], sum: number) {
+        const bought = {
+            contributionAmount: 0,
+            sharesCount: 0,
+            moneyBalance: 0,
+            currentPrice: 0,
+            allBet: picked.length * sum / picked[0].low * picked[picked.length - 1].low
+        };
+
+        picked.map((item) => {
+            const cash = sum + bought.moneyBalance;
+            const sharesBought = Math.floor(cash/item.high);
+            bought.contributionAmount+= sum,
+            bought.sharesCount+= sharesBought,
+            bought.moneyBalance = cash - (item.high * sharesBought);
+        }, bought);
+
+        bought.currentPrice = picked[picked.length - 1].low * bought.sharesCount;
+
+        return bought;
     }
 }
 

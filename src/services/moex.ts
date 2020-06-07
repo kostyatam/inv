@@ -11,10 +11,6 @@ enum EBoards {
   EQNE = 'EQNE', //Основной режим: Акции и паи внесписочные - безадрес.
 }
 
-export enum EPeriod {
-  MONTHLY = 'MONTHLY',
-}
-
 class MOEXService {
   getTimeBorders (ticker: string): Promise<IBorders> {
     return new Promise((resolve, reject) => request
@@ -53,57 +49,40 @@ class MOEXService {
         url: `${ISS_URL}/history/engines/stock/markets/shares/securities/${ticker}.json?start=${start}&from=${from}&till=${till}`,
         rejectUnauthorized: false
       }, (err, response, body) => {
-      if (err || response.statusCode !== 200) {
-        return reject(err);
-      }
-      const res = JSON.parse(body);
-      const {data} = res.history;
-      const [_, total, limit] = res['history.cursor'].data[0];
-      const history: IHistory[] = [];
-      for (let i = 0; i < data.length; i++) {
-        const share = data[i];
-        const [board, date] = share;
-        if (!EBoards[board]) continue;
-        if (history[i - 1] && date === history[i - 1].date) continue;
-        history.push({
-          open: share[6],
-          close: share[11],
-          low: share[7],
-          high: share[8],
-          usd: null, //getCurrencyRateByDate(date, rates),
-          date
-        });
-      };
-      resolve({
-        history,
-        pagination: {
-          start,
-          total,
-          limit
+        if (err || response.statusCode !== 200) {
+          return reject(err);
         }
-      });
+        const res = JSON.parse(body);
+        const {data} = res.history;
+        const [_, total, limit] = res['history.cursor'].data[0];
+        const history: IHistory[] = [];
+        for (let i = 0; i < data.length; i++) {
+          const share = data[i];
+          const [board, date] = share;
+          if (!EBoards[board]) continue;
+          if (history[i - 1] && date === history[i - 1].date) continue;
+          history.push({
+            open: share[6],
+            close: share[11],
+            low: share[7],
+            high: share[8],
+            usd: null, //getCurrencyRateByDate(date, rates),
+            date
+          });
+        };
+        resolve({
+          history,
+          pagination: {
+            start,
+            total,
+            limit
+          }
+        });
     }))
   }
 }
 
 export const moexService  = new MOEXService;
-
-// export const pick = (history: IHistory[], from: string, period: EPeriod = EPeriod.MONTHLY): IHistory[] => {
-//   if (period === EPeriod.MONTHLY) {
-//     const res: IHistory[] = [];
-//     history.map((item, index, arr) => {
-//       if (moment(item.date).isSame(from)) {
-//         from = moment(from).add(1, 'month').format('YYYY-MM-DD');
-//         return res.push(item);
-//       }
-//       if (moment(item.date).isAfter(from)) {
-//         from = moment(from).add(1, 'month').format('YYYY-MM-DD');
-//         return res.push(arr[index - 1]);
-//       }
-//     });
-//     return res;
-//   }
-// }
 
 // async function main () {
 //   const borders = await getTimeBorders('MOEX');

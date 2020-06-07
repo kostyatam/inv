@@ -2,7 +2,10 @@
     "compilerOptions": {
         "types": ["node", "express"],
         "esModuleInterop": true,
-        "noImplicitAny": true
+        "noImplicitAny": true,
+        "target": "es5",
+        "sourceMap": true,
+        "module": "commonjs"
     },
     "include": [
         "src/**/*"
